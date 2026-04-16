@@ -13,6 +13,8 @@ import {
 import Toast from "react-native-toast-message";
 
 import { ROUTER_PATHS } from "@/constant/appRoutes";
+import { registerUser } from "@/features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
@@ -22,19 +24,26 @@ import { AppInput } from "../components/AppInput";
 import { STRINGS } from "../constant/string";
 import { colors } from "../theme/colors";
 
+type ImageFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
 type Input = {
   name: string;
   username: string;
   email: string;
   password: string;
-  avatar: string;
-  coverImage: string;
+  avatar: ImageFile;
+  coverImage?: ImageFile;
 };
 
 const SignupScreen = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(({ user }) => user.loading);
   const s = STRINGS.signup;
-
   const [avatar, setAvatar] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
 
@@ -45,9 +54,16 @@ const SignupScreen = () => {
     formState: { errors },
   } = useForm<Input>();
 
+  /**
+   * Pick an image from the gallery.
+   * If the image is for the avatar, it will set the avatar state and
+   * the avatar field in the form. If the image is for the cover, it will
+   * set the cover image state and the coverImage field in the form.
+   * @param {string} type The type of the image, either "avatar" or "cover"
+   * @returns {Promise<void>} A promise that resolves when the image is picked
+   */
   const pickImage = async (type: "avatar" | "cover") => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (status !== "granted") {
       Alert.alert("Permission Denied", "Gallery permission is required.");
       return;
@@ -61,14 +77,21 @@ const SignupScreen = () => {
     });
 
     if (!response.canceled) {
-      const uri = response.assets[0].uri;
+      const asset = response.assets[0];
+
+      // ✅ React Native needs uri, name, AND type exactly like this
+      const file = {
+        uri: asset.uri,
+        name: asset.fileName || `image_${Date.now()}.jpg`, // use real name if available
+        type: asset.mimeType || "image/jpeg", // use real mime type
+      };
 
       if (type === "avatar") {
-        setAvatar(uri);
-        setValue("avatar", uri);
+        setAvatar(asset.uri);
+        setValue("avatar", file);
       } else {
-        setCoverImage(uri);
-        setValue("coverImage", uri);
+        setCoverImage(asset.uri);
+        setValue("coverImage", file);
       }
     }
   };
@@ -82,7 +105,36 @@ const SignupScreen = () => {
       });
       return;
     }
-    // dispatch
+    const formData = new FormData();
+
+    formData.append("name", data.name);
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("avatar", data.avatar as any);
+    if (data.coverImage) {
+      formData.append("coverImage", data.coverImage as any);
+    }
+
+    console.log("Sending userData:", formData); // for debugging
+
+    dispatch(registerUser(formData))
+      .unwrap()
+      .then((userData) => {
+        router.push(ROUTER_PATHS.Login);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: userData.message || "User registered successfully",
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to register user",
+        });
+      });
   };
 
   return (
@@ -127,7 +179,7 @@ const SignupScreen = () => {
 
           {/* Form */}
           <View style={styles.form}>
-            <Text>{s.fullName}</Text>
+            <Text>{s.name}</Text>
             <Controller
               control={control}
               name="name"
@@ -144,7 +196,7 @@ const SignupScreen = () => {
               <Text style={styles.error}>{errors.name.message}</Text>
             )}
 
-            <Text>{s.name}</Text>
+            <Text>{s.username}</Text>
             <Controller
               control={control}
               name="username"
@@ -202,6 +254,7 @@ const SignupScreen = () => {
               <AppButton
                 title={s.createAccount}
                 onPress={handleSubmit(onSubmit)}
+                loading={isLoading === "pending"}
               />
             </View>
 

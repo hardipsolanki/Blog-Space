@@ -9,21 +9,61 @@ import {
   View,
 } from "react-native";
 
-import { ROUTER_PATHS } from "@/constant/appRoutes";
+import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
+import { loginUser } from "@/features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useRouter } from "expo-router";
+import { Controller, useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { AppButton } from "../components/AppButton";
 import { AppInput } from "../components/AppInput";
 import { STRINGS } from "../constant/string";
 import { colors } from "../theme/colors";
+
+type Input = {
+  email: string;
+  password: string;
+};
+
 const LoginScreen = () => {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(({ user }) => user.loading);
   const router = useRouter();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Input>();
+
+  const onSubmit = (data: Input) => {
+    dispatch(loginUser(data))
+      .unwrap()
+      .then((userData) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: userData.message || "Login successful",
+        });
+
+        router.push(TABS_PATHS.Index); // you may want Home here
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Login failed",
+        });
+      });
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -39,11 +79,33 @@ const LoginScreen = () => {
               <Text style={styles.subtitle}>{STRINGS.login.subtitle}</Text>
             </View>
 
-            {/* Inputs */}
+            {/* Form */}
             <View style={styles.form}>
+              {/* EMAIL */}
               <Text style={styles.label}>{STRINGS.login.email}</Text>
-              <AppInput placeholder="john@example.com" />
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Invalid email",
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <AppInput
+                    placeholder="john@example.com"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+              {errors.email && (
+                <Text style={styles.error}>{errors.email.message}</Text>
+              )}
 
+              {/* PASSWORD */}
               <View style={styles.passwordHeader}>
                 <Text style={styles.label}>{STRINGS.login.password}</Text>
                 <TouchableOpacity>
@@ -53,10 +115,36 @@ const LoginScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              <AppInput placeholder="••••••••" secure />
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Minimum 6 characters",
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <AppInput
+                    placeholder="••••••••"
+                    secure
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+              {errors.password && (
+                <Text style={styles.error}>{errors.password.message}</Text>
+              )}
 
+              {/* BUTTON */}
               <View style={{ marginTop: 20 }}>
-                <AppButton title={STRINGS.login.login} />
+                <AppButton
+                  loading={isLoading === "pending"}
+                  onPress={handleSubmit(onSubmit)}
+                  title={STRINGS.login.login}
+                />
               </View>
             </View>
 
@@ -77,7 +165,6 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -140,5 +227,9 @@ const styles = StyleSheet.create({
   },
   muted: {
     color: colors.light.mutedText,
+  },
+  error: {
+    color: "red",
+    fontSize: 12,
   },
 });

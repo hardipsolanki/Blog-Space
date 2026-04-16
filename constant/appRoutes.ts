@@ -15,10 +15,10 @@ export const ROUTES = {
 
 
 export const TABS_PATHS = {
-    Index: '/home',
+    Index: '/(tabs)/home',
     Profile: '/profile',
     AddPost: '/add-post'
-}
+} as const
 
 export const ROUTER_PATHS = {
     Login: '/login',

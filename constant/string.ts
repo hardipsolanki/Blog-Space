@@ -13,8 +13,8 @@ export const STRINGS = {
     signup: {
         title: 'BlogSpace',
         subtitle: 'Share your stories with the world',
-        fullName: 'Full Name',
-        name: "Name",
+        name: 'Name',
+        username: "Username",
         email: 'Email',
         password: 'Password',
         confirmPassword: 'Confirm Password',

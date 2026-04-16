@@ -7,8 +7,5 @@
 
 // vercel deployement 
 export const CONFIG = {
-    GOOGLE_REDIRECT_URL: "https://byte-bazaar-ten.vercel.app/api/v1/users/google",
-    FACEBOOK_REDIRECT_URL: "https://byte-bazaar-ten.vercel.app/api/v1/users/facebook",
-    BACKEND_URL: "https://byte-bazaar-ten.vercel.app/",
-    API_BASE_URL: "https://blog-api-d2uc.onrender.com/api/v1"
+    API_BASE_URL: "http://192.168.27.103:5000"
 }
