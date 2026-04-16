@@ -1,19 +1,18 @@
-export interface User {
-    id: string;
-    username: string;
-    fullName: string;
-    avatar: string;
-    coverPhoto?: string;
-    followers: number;
-    following: number;
-    posts: number;
-    isFollowing?: boolean;
-}
-type ImageFile = {
+export type ImageFile = {
     uri: string;
     name: string;
     type: string;
 };
+
+export interface User {
+    _id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar: string;
+    coverImage?: string;
+    createdAt: string;
+}
 export interface UserSignupReq {
     username: string;
     name: string;
@@ -32,8 +31,7 @@ export interface UserSignupRes {
         username: string;
         email: string;
         avatar: string;
-        coverImage: string;
-        token: string;
+        coverImage?: string;
         createdAt: string;
         updatedAt: string;
         __v: number;
@@ -50,8 +48,8 @@ export interface UserLoginRes {
     statusCode: number;
     message: string;
     data: {
-        accessToken: string;
-        refreshToken: string;
+        AccessToken: string;
+        RefreshToken: string;
     };
     success: boolean;
 }
@@ -60,5 +58,25 @@ export interface CurrentUserReq {
     statusCode: number;
     message: string;
     data: User;
+    success: boolean;
+}
+
+export interface Profile {
+    _id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar: string;
+    coverImage?: string;
+    createdAt: string;
+    followingCount: number;
+    followersCount: number;
+    isFollowed: boolean
+}
+
+export interface GetUserProfileRes {
+    statusCode: number;
+    message: string;
+    data: Profile;
     success: boolean;
 }

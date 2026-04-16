@@ -1,21 +1,42 @@
 import { PostCard } from "@/components/PostCard";
+import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { STRINGS } from "@/constant/string";
-import { mockPosts } from "@/data";
+import { getPosts } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const { loading, posts } = useAppSelector(({ post }) => post);
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"all" | "following">("all");
   const s = STRINGS.home;
+
+  useEffect(() => {
+    dispatch(getPosts());
+  }, [dispatch]);
+
+  if (loading === "pending") {
+    return (
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          data={[1, 2, 3, 4, 5]} // Show 5 skeletons
+          renderItem={() => <SkeletonPostCard />}
+          keyExtractor={(item) => item.toString()}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,10 +90,15 @@ export default function HomeScreen() {
       </View>
 
       {/* Feed */}
-      <FlatList
+      {/* <FlatList
         data={mockPosts}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <PostCard post={item} />}
+      /> */}
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => <PostCard {...item} />}
       />
     </SafeAreaView>
   );

@@ -10,6 +10,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <SafeAreaProvider>
         <Stack>
+          <Stack.Screen name={ROUTES.Index} options={{ headerShown: false }} />
           <Stack.Screen name={ROUTES.Tabs} options={{ headerShown: false }} />
           <Stack.Screen
             name={ROUTES.PostDetails}
@@ -26,7 +27,7 @@ export default function RootLayout() {
           {/* <Stack.Screen name={ROUTES.comments} options={{ headerShown: false }} /> */}
           <Stack.Screen name={ROUTES.Login} options={{ headerShown: false }} />
           <Stack.Screen name={ROUTES.Signup} options={{ headerShown: false }} />
-          <Stack.Screen name={ROUTES.Index} options={{ headerShown: false }} />
+          {/* <Stack.Screen name={ROUTES.Index} options={{ headerShown: false }} /> */}
         </Stack>
         <Toast />
       </SafeAreaProvider>

@@ -1,9 +1,11 @@
+import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { STRINGS } from "@/constant/string";
-import { mockPosts } from "@/data";
+import { getSinglePost } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -14,19 +16,32 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const PostDetailScreen = () => {
+  const { postId } = useLocalSearchParams();
+  const dispatch = useAppDispatch();
+  const { loading, signlePost } = useAppSelector((state) => state.post);
+
+  useEffect(() => {
+    if (!postId) return;
+    dispatch(getSinglePost(postId as string));
+  }, [postId, dispatch]);
   const router = useRouter();
   const s = STRINGS.postDetail;
 
-  const post = mockPosts[0];
-
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
-  const [likes, setLikes] = useState(post.likes);
+  const [isLiked, setIsLiked] = useState(signlePost?.isLiked);
+  const [likes, setLikes] = useState(signlePost?.likesCount || 0);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
   };
+
+  if (loading === "pending" || !signlePost) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SkeletonPostCard />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,7 +52,7 @@ const PostDetailScreen = () => {
           <Image
             source={{
               uri:
-                post.coverImage ||
+                signlePost?.image ||
                 "https://images.unsplash.com/photo-1499750310107-5fef28a66643",
             }}
             style={styles.cover}
@@ -55,18 +70,20 @@ const PostDetailScreen = () => {
         {/* Content */}
         <View style={styles.content}>
           {/* Title */}
-          <Text style={styles.title}>{post.title}</Text>
+          <Text style={styles.title}>{signlePost?.title}</Text>
 
           {/* Author */}
           <View style={styles.authorRow}>
             <View style={styles.authorInfo}>
               <Image
-                source={{ uri: post.author.avatar }}
+                source={{ uri: signlePost?.owner?.avatar }}
                 style={styles.avatar}
               />
               <View>
-                <Text style={styles.name}>{post.author.fullName}</Text>
-                <Text style={styles.username}>@{post.author.username}</Text>
+                <Text style={styles.name}>{signlePost?.owner?.name}</Text>
+                <Text style={styles.username}>
+                  @{signlePost?.owner?.username}
+                </Text>
               </View>
             </View>
 
@@ -76,13 +93,11 @@ const PostDetailScreen = () => {
           </View>
 
           {/* Meta */}
-          <Text style={styles.meta}>
-            {post.readTime} · {post.timestamp}
-          </Text>
+          <Text style={styles.meta}>{signlePost?.createdAt}</Text>
 
           {/* Article */}
-          <Text style={styles.paragraph}>{post.excerpt}</Text>
-          <Text style={styles.paragraph}>
+          <Text style={styles.paragraph}>{signlePost?.content}</Text>
+          {/* <Text style={styles.paragraph}>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </Text>
@@ -93,7 +108,7 @@ const PostDetailScreen = () => {
           <Text style={styles.paragraph}>
             Sed ut perspiciatis unde omnis iste natus error sit voluptatem
             accusantium doloremque laudantium.
-          </Text>
+          </Text> */}
         </View>
       </ScrollView>
 
@@ -111,23 +126,13 @@ const PostDetailScreen = () => {
 
           <TouchableOpacity style={styles.actionBtn}>
             <Ionicons name="chatbubble-outline" size={22} />
-            <Text>{post.comments}</Text>
+            <Text>{signlePost?.commentsCount}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.rightActions}>
           <TouchableOpacity>
             <Ionicons name="share-social-outline" size={22} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setIsBookmarked(!isBookmarked)}>
-            <Ionicons
-              name={isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color={
-                isBookmarked ? colors.light.primary : colors.light.foreground
-              }
-            />
           </TouchableOpacity>
         </View>
       </View>

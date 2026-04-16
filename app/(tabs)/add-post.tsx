@@ -16,36 +16,45 @@ import {
   View,
 } from "react-native";
 
+import { TABS_PATHS } from "@/constant/appRoutes";
+import { addPost, getPosts } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { Controller, useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+type ImageFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+type Input = {
+  title: string;
+  content: string;
+  status: "active" | "inactive";
+  image: ImageFile;
+};
 
 export default function AddPostScreen() {
   const router = useRouter();
   const s = STRINGS.addPost;
+  const dispatch = useAppDispatch();
+  const { loading } = useAppSelector(({ post }) => post);
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [image, setImage] = useState<any>(null);
 
-  // const pickImage = async () => {
-  //   const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-  //   if (status !== "granted") {
-  //     Alert.alert("Permission Denied", "Camera permission is required.");
-  //     return;
-  //   }
-
-  //   const response = await ImagePicker.launchCameraAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     base64: true,
-  //     quality: 0.5,
-  //     allowsEditing: true,
-  //     aspect: [1, 1],
-  //   });
-
-  //   if (!response.canceled) {
-  //     setImage(response.assets[0].uri);
-  //   }
-  // };
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<Input>({
+    defaultValues: {
+      status: "active",
+    },
+  });
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,8 +73,56 @@ export default function AddPostScreen() {
     });
 
     if (!response.canceled) {
-      setImage(response.assets[0].uri);
+      const asset = response.assets[0];
+
+      // ✅ React Native needs uri, name, AND type exactly like this
+      const file = {
+        uri: asset.uri,
+        name: asset.fileName || `image_${Date.now()}.jpg`, // use real name if available
+        type: asset.mimeType || "image/jpeg", // use real mime type
+      };
+
+      setImage(file.uri);
+      setValue("image", file);
     }
+  };
+
+  const onSubmit = (data: Input) => {
+    if (!data.image) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please select an image.",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("title", data.title);
+    formData.append("content", data.content);
+    formData.append("status", data.status);
+    formData.append("post", data.image as any);
+
+    dispatch(addPost(formData))
+      .unwrap()
+      .then((data) => {
+        if (data) {
+          dispatch(getPosts())
+            .unwrap()
+            .then((data) => {
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: data.message || "Post added successfully",
+              });
+              router.push(TABS_PATHS.Index);
+            });
+        }
+      })
+      .catch((error) => {
+        console.log("error while add post: ", error);
+      });
   };
 
   return (
@@ -86,25 +143,60 @@ export default function AddPostScreen() {
 
             <Text style={styles.headerTitle}>{s.title}</Text>
 
-            <AppButton style={styles.publishBtn} title={s.publish} />
+            <AppButton
+              onPress={handleSubmit(onSubmit)}
+              style={styles.publishBtn}
+              title={s.publish}
+              loading={loading === "pending"}
+            />
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Title */}
-            <TextInput
-              placeholder={s.postTitle}
-              placeholderTextColor={colors.light.mutedText}
-              style={styles.titleInput}
+            <Controller
+              control={control}
+              name="title"
+              rules={{ required: "Title is required" }}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  placeholder={s.postTitle}
+                  placeholderTextColor={colors.light.mutedText}
+                  style={styles.titleInput}
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.title && (
+              <Text style={{ color: "red" }}>{errors.title.message}</Text>
+            )}
 
             {/* Content */}
-            <TextInput
-              placeholder={s.content}
-              placeholderTextColor={colors.light.mutedText}
-              multiline
-              style={styles.contentInput}
+            <Controller
+              control={control}
+              name="content"
+              rules={{
+                required: "Content is required",
+                minLength: {
+                  value: 10,
+                  message: "Minimum 10 characters",
+                },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  placeholder={s.content}
+                  placeholderTextColor={colors.light.mutedText}
+                  multiline
+                  style={styles.contentInput}
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.content && (
+              <Text style={{ color: "red" }}>{errors.content.message}</Text>
+            )}
 
             {/* Status */}
             <View>
@@ -116,7 +208,10 @@ export default function AddPostScreen() {
                     styles.statusBtn,
                     status === "active" && styles.activeStatus,
                   ]}
-                  onPress={() => setStatus("active")}
+                  onPress={() => {
+                    setStatus("active");
+                    setValue("status", "active"); // ✅ RHF sync
+                  }}
                 >
                   <Text
                     style={
@@ -134,7 +229,10 @@ export default function AddPostScreen() {
                     styles.statusBtn,
                     status === "inactive" && styles.activeStatus,
                   ]}
-                  onPress={() => setStatus("inactive")}
+                  onPress={() => {
+                    setStatus("inactive");
+                    setValue("status", "inactive"); // ✅ RHF sync
+                  }}
                 >
                   <Text
                     style={
@@ -165,6 +263,11 @@ export default function AddPostScreen() {
                 </>
               )}
             </TouchableOpacity>
+
+            {/* optional image error */}
+            {errors.image && (
+              <Text style={{ color: "red" }}>Image is required</Text>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>

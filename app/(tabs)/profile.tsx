@@ -1,28 +1,46 @@
 import { ROUTER_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
-import { mockPosts, mockUsers } from "@/data";
+import { getProfile } from "@/features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
+import { Post } from "@/types/post";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
-    Dimensions,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 const ProfileScreen = () => {
+  const dispatch = useAppDispatch();
+  const { profile: user, loading } = useAppSelector((state) => state.user);
+  const posts = useAppSelector((state) => state.post);
   const router = useRouter();
   const s = STRINGS.profile;
 
-  const user = mockUsers[0];
-  const userPosts = mockPosts.filter((p) => p.author.id === user.id);
+  useEffect(() => {
+    dispatch(getProfile(user?.username || "one1"));
+  }, [dispatch]);
+
+  const userPosts = posts.posts?.filter(
+    (post: Post) => post.owner._id === user?._id,
+  );
+
+  if (loading === "pending" || !user || !userPosts) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,7 +60,7 @@ const ProfileScreen = () => {
       {/* Content */}
       <FlatList
         data={userPosts}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id}
         numColumns={2}
         ListHeaderComponent={
           <>
@@ -50,7 +68,7 @@ const ProfileScreen = () => {
             <Image
               source={{
                 uri:
-                  user.coverPhoto ||
+                  user.coverImage ||
                   "https://images.unsplash.com/photo-1557683316-973673baf926",
               }}
               style={styles.cover}
@@ -60,15 +78,15 @@ const ProfileScreen = () => {
             <View style={styles.profileSection}>
               <Image source={{ uri: user.avatar }} style={styles.avatar} />
 
-              <Text style={styles.name}>{user.fullName}</Text>
+              <Text style={styles.name}>{user.name}</Text>
               <Text style={styles.handle}>@{user.username}</Text>
 
-              {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
+              {/* {user.bio && <Text style={styles.bio}>{user.bio}</Text>} */}
 
               {/* Stats */}
               <View style={styles.stats}>
                 <View>
-                  <Text style={styles.statNumber}>{user.posts}</Text>
+                  <Text style={styles.statNumber}>{userPosts?.length}</Text>
                   <Text style={styles.statLabel}>{s.posts}</Text>
                 </View>
 
@@ -76,7 +94,7 @@ const ProfileScreen = () => {
                   <TouchableOpacity
                     onPress={() => router.push(ROUTER_PATHS.followers)}
                   >
-                    <Text style={styles.statNumber}>{user.followers}</Text>
+                    <Text style={styles.statNumber}>{user.followersCount}</Text>
                     <Text style={styles.statLabel}>{s.followers}</Text>
                   </TouchableOpacity>
                 </View>
@@ -85,7 +103,7 @@ const ProfileScreen = () => {
                   <TouchableOpacity
                     onPress={() => router.push(ROUTER_PATHS.followings)}
                   >
-                    <Text style={styles.statNumber}>{user.following}</Text>
+                    <Text style={styles.statNumber}>{user.followingCount}</Text>
                     <Text style={styles.statLabel}>{s.following}</Text>
                   </TouchableOpacity>
                 </View>
@@ -106,11 +124,8 @@ const ProfileScreen = () => {
         }
         renderItem={({ item }) => (
           <View style={styles.gridItem}>
-            {item.coverImage ? (
-              <Image
-                source={{ uri: item.coverImage }}
-                style={styles.postImage}
-              />
+            {item.image ? (
+              <Image source={{ uri: item.image }} style={styles.postImage} />
             ) : (
               <View style={styles.placeholder}>
                 <Text style={styles.placeholderText}>{item.title}</Text>
