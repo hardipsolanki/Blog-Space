@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import { Post } from "@/types/post";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
   Dimensions,
@@ -21,20 +21,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const screenWidth = Dimensions.get("window").width;
 const ProfileScreen = () => {
   const dispatch = useAppDispatch();
+  const { username } = useLocalSearchParams<{ username: string }>();
   const { profile: user, loading } = useAppSelector((state) => state.user);
   const posts = useAppSelector((state) => state.post);
   const router = useRouter();
   const s = STRINGS.profile;
 
   useEffect(() => {
-    dispatch(getProfile(user?.username || "one1"));
-  }, [dispatch]);
+    if (username) dispatch(getProfile(username as string));
+  }, [dispatch, username]);
 
   const userPosts = posts.posts?.filter(
     (post: Post) => post.owner._id === user?._id,
   );
 
-  if (loading === "pending" || !user || !userPosts) {
+  if (loading === "pending" || !username || !user || !userPosts) {
     return (
       <SafeAreaView style={styles.container}>
         <Text>Loading...</Text>
@@ -49,9 +50,7 @@ const ProfileScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} />
         </TouchableOpacity>
-
         <Text style={styles.username}>@{user.username}</Text>
-
         <TouchableOpacity>
           <Ionicons name="settings-outline" size={24} />
         </TouchableOpacity>

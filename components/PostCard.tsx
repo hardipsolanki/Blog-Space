@@ -1,4 +1,4 @@
-import { ROUTER_PATHS } from "@/constant/appRoutes";
+import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
 import { Post } from "@/types/post";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useRouter } from "expo-router";
@@ -12,17 +12,23 @@ export const PostCard = (post: Post) => {
   return (
     <Link href={`/post-details/${post._id}`}>
       <View style={styles.container}>
-        {/* Author */}
-        <View style={styles.header}>
-          <Image source={{ uri: post.owner.avatar }} style={styles.avatar} />
+        <Link
+          href={{
+            pathname: TABS_PATHS.UserProfile,
+            params: { username: post.owner.username },
+          }}
+        >
+          <View style={styles.header}>
+            <Image source={{ uri: post.owner.avatar }} style={styles.avatar} />
 
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{post.owner.username}</Text>
-            <Text style={styles.username}>
-              @{post.owner.username} · {post.createdAt}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>{post.owner.username}</Text>
+              <Text style={styles.username}>
+                @{post.owner.username} · {post.createdAt}
+              </Text>
+            </View>
           </View>
-        </View>
+        </Link>
 
         {/* Content */}
         <Text style={styles.title}>{post.title}</Text>

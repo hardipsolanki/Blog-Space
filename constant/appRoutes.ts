@@ -3,7 +3,7 @@ export const ROUTES = {
     Index: 'index',
     Login: 'login',
     Signup: 'signup',
-    Profile: 'profile',
+    Profile: 'profile/[username]',
     AddPost: 'add-post',
     Home: "home",
     PostDetails: "post-details/[postId]",
@@ -17,7 +17,8 @@ export const ROUTES = {
 export const TABS_PATHS = {
     Index: '/(tabs)/home',
     Profile: '/profile',
-    AddPost: '/add-post'
+    AddPost: '/add-post',
+    UserProfile: '/(tabs)/profile/[username]',
 } as const
 
 export const ROUTER_PATHS = {

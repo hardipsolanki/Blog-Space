@@ -1,10 +1,11 @@
 import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
+import { TABS_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
 import { getSinglePost } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -72,21 +73,27 @@ const PostDetailScreen = () => {
           {/* Title */}
           <Text style={styles.title}>{signlePost?.title}</Text>
 
-          {/* Author */}
           <View style={styles.authorRow}>
-            <View style={styles.authorInfo}>
-              <Image
-                source={{ uri: signlePost?.owner?.avatar }}
-                style={styles.avatar}
-              />
-              <View>
-                <Text style={styles.name}>{signlePost?.owner?.name}</Text>
-                <Text style={styles.username}>
-                  @{signlePost?.owner?.username}
-                </Text>
+            {/* Author */}
+            <Link
+              href={{
+                pathname: TABS_PATHS.UserProfile,
+                params: { username: signlePost.owner.username },
+              }}
+            >
+              <View style={styles.authorInfo}>
+                <Image
+                  source={{ uri: signlePost?.owner?.avatar }}
+                  style={styles.avatar}
+                />
+                <View>
+                  <Text style={styles.name}>{signlePost?.owner?.name}</Text>
+                  <Text style={styles.username}>
+                    @{signlePost?.owner?.username}
+                  </Text>
+                </View>
               </View>
-            </View>
-
+            </Link>
             <TouchableOpacity style={styles.followBtn}>
               <Text style={styles.followText}>{s.follow}</Text>
             </TouchableOpacity>
@@ -178,6 +185,7 @@ const styles = StyleSheet.create({
 
   /* AUTHOR */
   authorRow: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,

@@ -20,7 +20,6 @@ export default function Index() {
           router.replace(ROUTER_PATHS.Login);
           return;
         }
-
         const result = await dispatch(crrentUser()).unwrap();
 
         if (result.data) {

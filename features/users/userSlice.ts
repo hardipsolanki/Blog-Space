@@ -90,7 +90,7 @@ export const getProfile = createAsyncThunk(
     'users/profile',
     async (username: string, { rejectWithValue }) => {
         try {
-            console.log({username})
+            console.log({ username })
             const response = await getReq<GetUserProfileRes>(`/api/v1/users/${username}`)
             return response.data
         } catch (error: any) {
