@@ -7,9 +7,9 @@ export const ROUTES = {
     AddPost: 'add-post',
     Home: "home",
     PostDetails: "post-details/[postId]",
-    followers: "followers",
-    followings: "followings",
-    comments: "comments/[postId]"
+    followers: "followers/[userId]",
+    followings: "followings/[userId]",
+    comments: "comments/[postId]",
 };
 
 
@@ -27,7 +27,7 @@ export const ROUTER_PATHS = {
     Profile: '/profile',
     AddPost: '/add-post',
     PostDetails: '/post-details/[postId]',
-    followers: '/followers',
-    followings: "/followings",
+    followers: "/followers/[userId]",
+    followings: "/followings/[userId]",
     comments: "/comments/[postId]"
 } as const

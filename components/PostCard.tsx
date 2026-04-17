@@ -27,7 +27,7 @@ export const PostCard = (post: Post) => {
         Toast.show({
           type: "error",
           text1: "Error",
-          text2: error.message || "Failed to register user",
+          text2: error.message || "Failed to like user",
         });
       });
   };

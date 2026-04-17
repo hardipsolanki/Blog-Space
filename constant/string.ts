@@ -47,6 +47,7 @@ export const STRINGS = {
         followers: 'Followers',
         following: 'Following',
         follow: 'Follow',
+        unfollow: 'Unfollow',
     },
     postDetail: {
         follow: 'Follow',

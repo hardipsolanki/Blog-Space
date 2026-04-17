@@ -11,6 +11,7 @@ interface PostState {
     posts: Post[] | null;
     signlePost: Post | null,
     comments: Comment[] | null,
+    // also add likes as a stat for showing like user
     userPosts: Post[] | null
     loading: 'idle' | 'pending' | 'succeeded' | 'failed',
     likeDislikeLoading: 'idle' | 'pending' | 'succeeded' | 'failed',

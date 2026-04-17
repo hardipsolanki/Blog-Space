@@ -2,13 +2,17 @@ import { getReq, postReq } from '@/config/axiosConfig';
 import { CurrentUserReq, GetUserProfileRes, Profile, User, UserLoginReq, UserLoginRes, UserSignupRes } from '@/types/user';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
+import { Followers, FollowUnfollow, GetFollowersRes } from '@/types/folow';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define a type for the slice state
 interface UserState {
     userData: User | null;
     isAuthenticated: boolean;
-    profile: Profile | null
+    profile: Profile | null,
+    followers: Followers[] | null,
+    followings: Followers[] | null,
+    folowersLoading: 'idle' | 'pending' | 'succeeded' | 'failed',
     loading: 'idle' | 'pending' | 'succeeded' | 'failed',
 }
 
@@ -47,7 +51,6 @@ export const registerUser = createAsyncThunk(
         }
     },
 )
-
 export const loginUser = createAsyncThunk(
     'users/login',
     async (userData: UserLoginReq, { rejectWithValue }) => {
@@ -84,13 +87,10 @@ export const crrentUser = createAsyncThunk(
         }
     },
 )
-
-// get profile /api/v1/users/username
 export const getProfile = createAsyncThunk(
     'users/profile',
     async (username: string, { rejectWithValue }) => {
         try {
-            console.log({ username })
             const response = await getReq<GetUserProfileRes>(`/api/v1/users/${username}`)
             return response.data
         } catch (error: any) {
@@ -103,13 +103,65 @@ export const getProfile = createAsyncThunk(
         }
     },
 )
+export const getFollowers = createAsyncThunk(
+    'users/followers',
+    async (userId: string, { rejectWithValue }) => {
+        try {
+            const response = await getReq<GetFollowersRes>(`/api/v1/follow/list/followers/${userId}`)
+            return response.data
+        } catch (error: any) {
+            console.log("erro while get followers: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    }
+)
+export const getFollowings = createAsyncThunk(
+    'users/followings',
+    async (userId: string, { rejectWithValue }) => {
+        try {
+            const response = await getReq<GetFollowersRes>(`/api/v1/follow/list/following/${userId}`)
+            return response.data
+        } catch (error: any) {
+            console.log("erro while get followings: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    }
+)
+export const followUnfollow = createAsyncThunk(
+    'users/follow',
+    async (userId: string, { rejectWithValue }) => {
+        try {
+            const response = await postReq<string, FollowUnfollow>(`/api/v1/follow/${userId}`)
+            return { ...response.data.data, statusCode: response.data.statusCode, message: response.data.message, userId: userId }
+        } catch (error: any) {
+            console.log("erro while add follow: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+
+        }
+    }
+)
 
 // Define the initial state using that type
 const initialState: UserState = {
     isAuthenticated: false,
     userData: null,
+    profile: null,
+    followers: null,
+    followings: null,
+    folowersLoading: 'idle',
     loading: 'idle',
-    profile: null
 }
 
 export const userSlice = createSlice({
@@ -166,6 +218,50 @@ export const userSlice = createSlice({
             .addCase(getProfile.rejected, (state) => {
                 state.loading = 'failed'
             })
+
+            // get followers
+            .addCase(getFollowers.pending, (state) => {
+                state.folowersLoading = 'pending'
+            })
+            .addCase(getFollowers.fulfilled, (state, action) => {
+                state.folowersLoading = 'succeeded'
+                state.followers = action.payload.data
+            })
+            .addCase(getFollowers.rejected, (state) => {
+                state.folowersLoading = 'failed'
+            })
+
+            // get followings
+            .addCase(getFollowings.pending, (state) => {
+                state.folowersLoading = 'pending'
+            })
+            .addCase(getFollowings.fulfilled, (state, action) => {
+                state.folowersLoading = 'succeeded'
+                state.followings = action.payload.data
+            })
+            .addCase(getFollowings.rejected, (state) => {
+                state.folowersLoading = 'failed'
+            })
+
+            // add follow
+            .addCase(followUnfollow.pending, (state) => {
+                state.folowersLoading = 'pending'
+            })
+            .addCase(followUnfollow.fulfilled, (state, action) => {
+                state.folowersLoading = 'succeeded'
+                if (state.profile && state.profile._id === action.payload.userId) {
+                    state.profile.followersCount = action.payload.following ? state.profile.followersCount + 1 : state.profile.followersCount - 1
+                    state.profile.isFollowed = action.payload.following
+                }
+                if (state.userData && state.profile && state.profile._id === state.userData._id) {
+                    state.profile.followingCount = action.payload.following ? state.profile.followingCount + 1 : state.profile.followingCount - 1
+                    state.profile.isFollowed = action.payload.following
+                }
+            })
+            .addCase(followUnfollow.rejected, (state) => {
+                state.folowersLoading = 'failed'
+            })
+
 
     }
 

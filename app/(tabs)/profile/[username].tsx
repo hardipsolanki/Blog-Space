@@ -1,7 +1,7 @@
 import { ROUTER_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
 import { getUserPosts } from "@/features/posts/postSlice";
-import { getProfile } from "@/features/users/userSlice";
+import { followUnfollow, getProfile } from "@/features/users/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 const screenWidth = Dimensions.get("window").width;
 const ProfileScreen = () => {
@@ -25,12 +26,36 @@ const ProfileScreen = () => {
     username: string;
     userId: string;
   }>();
-  const { profile: user, loading } = useAppSelector((state) => state.user);
+  const {
+    profile: user,
+    userData,
+    loading,
+    folowersLoading,
+  } = useAppSelector((state) => state.user);
   const { userPosts, loading: postLoading } = useAppSelector(
     ({ post }) => post,
   );
   const router = useRouter();
   const s = STRINGS.profile;
+
+  const handleFollowUnfollow = () => {
+    dispatch(followUnfollow(userId))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to follow user",
+        });
+      });
+  };
 
   useEffect(() => {
     if (!username || !userId) return;
@@ -96,7 +121,12 @@ const ProfileScreen = () => {
 
                 <View>
                   <TouchableOpacity
-                    onPress={() => router.push(ROUTER_PATHS.followers)}
+                    onPress={() =>
+                      router.push({
+                        pathname: ROUTER_PATHS.followers,
+                        params: { userId: user._id },
+                      })
+                    }
                   >
                     <Text style={styles.statNumber}>{user.followersCount}</Text>
                     <Text style={styles.statLabel}>{s.followers}</Text>
@@ -105,7 +135,12 @@ const ProfileScreen = () => {
 
                 <View>
                   <TouchableOpacity
-                    onPress={() => router.push(ROUTER_PATHS.followings)}
+                    onPress={() =>
+                      router.push({
+                        pathname: ROUTER_PATHS.followings,
+                        params: { userId: user._id },
+                      })
+                    }
                   >
                     <Text style={styles.statNumber}>{user.followingCount}</Text>
                     <Text style={styles.statLabel}>{s.following}</Text>
@@ -114,9 +149,17 @@ const ProfileScreen = () => {
               </View>
 
               {/* Follow Button */}
-              <TouchableOpacity style={styles.followBtn}>
-                <Text style={styles.followText}>{s.follow}</Text>
-              </TouchableOpacity>
+              {user._id !== userData?._id && (
+                <TouchableOpacity
+                  onPress={handleFollowUnfollow}
+                  disabled={folowersLoading === "pending"}
+                  style={styles.followBtn}
+                >
+                  <Text style={styles.followText}>
+                    {user.isFollowed ? s.unfollow : s.follow}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Tab Title */}
