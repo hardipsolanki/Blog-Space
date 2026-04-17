@@ -1,12 +1,37 @@
 import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
+import { likeDislikePost } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Post } from "@/types/post";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { colors } from "../theme/colors";
 
 export const PostCard = (post: Post) => {
+  const dispatch = useAppDispatch();
+  const { likeDislikeLoading } = useAppSelector((state) => state.post);
+
+  const handleLikeToggle = () => {
+    dispatch(likeDislikePost(post._id))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to register user",
+        });
+      });
+  };
+
   const router = useRouter();
   const [showLikes, setShowLikes] = useState(false);
   return (
@@ -46,9 +71,8 @@ export const PostCard = (post: Post) => {
               {/* LIKE BUTTON */}
               <TouchableOpacity
                 style={styles.likeRow}
-                onPress={() => {
-                  // handle like toggle here
-                }}
+                onPress={handleLikeToggle}
+                disabled={likeDislikeLoading === "pending"}
               >
                 <Ionicons
                   name={post.isLiked ? "heart" : "heart-outline"}

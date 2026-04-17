@@ -1,12 +1,12 @@
 import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { TABS_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
-import { getSinglePost } from "@/features/posts/postSlice";
+import { getSinglePost, likeDislikePost } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   Image,
   ScrollView,
@@ -16,10 +16,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 const PostDetailScreen = () => {
   const { postId } = useLocalSearchParams();
   const dispatch = useAppDispatch();
-  const { loading, signlePost } = useAppSelector((state) => state.post);
+  const { loading, signlePost, likeDislikeLoading } = useAppSelector(
+    (state) => state.post,
+  );
 
   useEffect(() => {
     if (!postId) return;
@@ -28,14 +31,6 @@ const PostDetailScreen = () => {
   const router = useRouter();
   const s = STRINGS.postDetail;
 
-  const [isLiked, setIsLiked] = useState(signlePost?.isLiked);
-  const [likes, setLikes] = useState(signlePost?.likesCount || 0);
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
-  };
-
   if (loading === "pending" || !signlePost) {
     return (
       <SafeAreaView style={styles.container}>
@@ -43,6 +38,25 @@ const PostDetailScreen = () => {
       </SafeAreaView>
     );
   }
+
+  const handleLikeToggle = () => {
+    dispatch(likeDislikePost(signlePost?._id))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to register user",
+        });
+      });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,13 +136,17 @@ const PostDetailScreen = () => {
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.leftActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleLike}>
+          <TouchableOpacity
+            disabled={likeDislikeLoading === "pending"}
+            style={styles.actionBtn}
+            onPress={handleLikeToggle}
+          >
             <Ionicons
-              name={isLiked ? "heart" : "heart-outline"}
+              name={signlePost.isLiked ? "heart" : "heart-outline"}
               size={22}
-              color={isLiked ? "red" : colors.light.foreground}
+              color={signlePost.isLiked ? "red" : colors.light.foreground}
             />
-            <Text>{likes}</Text>
+            <Text>{signlePost.likesCount}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionBtn}>

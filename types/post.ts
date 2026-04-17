@@ -40,3 +40,13 @@ export interface GetSinglePostRes {
     data: Post;
     success: boolean;
 }
+
+export interface LikeDislikePost {
+    statusCode: number;
+    message: string;
+    data: {
+        like: boolean;
+        postId: string
+    };
+    success: boolean;
+}
