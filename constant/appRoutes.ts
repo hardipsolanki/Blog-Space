@@ -9,7 +9,7 @@ export const ROUTES = {
     PostDetails: "post-details/[postId]",
     followers: "followers",
     followings: "followings",
-    comments: "comments"
+    comments: "comments/[postId]"
 };
 
 
@@ -26,8 +26,8 @@ export const ROUTER_PATHS = {
     Signup: '/signup',
     Profile: '/profile',
     AddPost: '/add-post',
-    PostDetails: '/post-details/postId',
+    PostDetails: '/post-details/[postId]',
     followers: '/followers',
     followings: "/followings",
-    comments: "/comments"
+    comments: "/comments/[postId]"
 } as const

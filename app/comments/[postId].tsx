@@ -1,28 +1,65 @@
 import renderCommentItem from "@/components/CommentBox";
 import { STRINGS } from "@/constant/string";
-import { mockComments } from "@/data";
+import { addComment, getComments } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
-    FlatList,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../theme/colors";
+import Toast from "react-native-toast-message";
+import { colors } from "../../theme/colors";
 
 const CommentsScreen = () => {
+  const { postId } = useLocalSearchParams<{ postId: string }>();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(({ user }) => user.userData);
+  const { commentLoading, comments } = useAppSelector(({ post }) => post);
   const s = STRINGS.comments;
-
   const [commentText, setCommentText] = useState("");
+
+  if (commentLoading === "pending" || !comments?.length || !user) {
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Loading...</Text>
+    </View>;
+  }
+
+  useEffect(() => {
+    if (!postId) return;
+    dispatch(getComments(postId));
+  }, [dispatch, postId]);
+
+  const handleAddComment = () => {
+    if (!commentText) return;
+    dispatch(addComment({ content: commentText, postId: postId }))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+        setCommentText("");
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to register user",
+        });
+      });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -37,7 +74,7 @@ const CommentsScreen = () => {
           </TouchableOpacity>
 
           <Text style={styles.title}>
-            {s.title} ({mockComments.length})
+            {s.title} ({comments?.length})
           </Text>
 
           <View style={{ width: 24 }} />
@@ -45,20 +82,15 @@ const CommentsScreen = () => {
 
         {/* LIST */}
         <FlatList
-          data={mockComments}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderCommentItem}
+          data={comments}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => renderCommentItem(item)}
           contentContainerStyle={{ paddingBottom: 90 }}
         />
 
         {/* INPUT BAR */}
         <View style={styles.inputContainer}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-            }}
-            style={styles.myAvatar}
-          />
+          <Image source={{ uri: user?.avatar }} style={styles.myAvatar} />
 
           <View style={styles.inputBox}>
             <TextInput
@@ -69,7 +101,8 @@ const CommentsScreen = () => {
             />
 
             <TouchableOpacity
-              disabled={!commentText.trim()}
+              onPress={handleAddComment}
+              disabled={!commentText.trim() || commentLoading === "pending"}
               style={[styles.sendBtn, commentText.trim() && styles.sendActive]}
             >
               <Ionicons

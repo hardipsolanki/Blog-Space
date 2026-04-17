@@ -40,7 +40,7 @@ export const PostCard = (post: Post) => {
         <Link
           href={{
             pathname: TABS_PATHS.UserProfile,
-            params: { username: post.owner.username },
+            params: { username: post.owner.username, userId: post.owner._id },
           }}
         >
           <View style={styles.header}>
@@ -75,9 +75,9 @@ export const PostCard = (post: Post) => {
                 disabled={likeDislikeLoading === "pending"}
               >
                 <Ionicons
-                  name={post.isLiked ? "heart" : "heart-outline"}
+                  name={post.isLike ? "heart" : "heart-outline"}
                   size={20}
-                  color={post.isLiked ? "red" : colors.light.mutedText}
+                  color={post.isLike ? "red" : colors.light.mutedText}
                 />
               </TouchableOpacity>
 
@@ -87,13 +87,25 @@ export const PostCard = (post: Post) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() => router.push(ROUTER_PATHS.comments)}
+            <Link
+              href={{
+                pathname: ROUTER_PATHS.comments,
+                params: { postId: post._id },
+              }}
             >
-              <Ionicons name="chatbubble-outline" size={20} />
-              <Text>{post.commentsCount}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() =>
+                  router.push({
+                    pathname: ROUTER_PATHS.comments,
+                    params: { postId: post._id },
+                  })
+                }
+              >
+                <Ionicons name="chatbubble-outline" size={20} />
+                <Text>{post.commentsCount}</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </View>

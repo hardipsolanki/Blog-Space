@@ -24,10 +24,12 @@ export default function RootLayout() {
             name={ROUTES.followings}
             options={{ headerShown: false }}
           />
-          {/* <Stack.Screen name={ROUTES.comments} options={{ headerShown: false }} /> */}
+          <Stack.Screen
+            name={ROUTES.comments}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name={ROUTES.Login} options={{ headerShown: false }} />
           <Stack.Screen name={ROUTES.Signup} options={{ headerShown: false }} />
-          {/* <Stack.Screen name={ROUTES.Index} options={{ headerShown: false }} /> */}
         </Stack>
         <Toast />
       </SafeAreaProvider>

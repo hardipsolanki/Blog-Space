@@ -44,7 +44,10 @@ export default function TabLayout() {
           ),
           href: {
             pathname: TABS_PATHS.UserProfile,
-            params: { username: userData?.username || "" },
+            params: {
+              username: userData?.username || "",
+              userId: userData?._id,
+            },
           },
         }}
       />

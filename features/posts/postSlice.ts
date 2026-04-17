@@ -1,5 +1,7 @@
 import { getReq, postReq } from '@/config/axiosConfig';
-import { GetPostRes, GetSinglePostRes, LikeDislikePost, Post } from '@/types/post';
+import { AddCommentReq, AddCommentRes, Comment, GetCommentRes } from '@/types/comment';
+import { LikeDislikePost } from '@/types/like';
+import { GetPostRes, GetSinglePostRes, Post } from '@/types/post';
 import { UserSignupRes } from '@/types/user';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
@@ -7,9 +9,12 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 // Define a type for the slice state
 interface PostState {
     posts: Post[] | null;
-    signlePost: Post | null
+    signlePost: Post | null,
+    comments: Comment[] | null,
+    userPosts: Post[] | null
     loading: 'idle' | 'pending' | 'succeeded' | 'failed',
-    likeDislikeLoading: 'idle' | 'pending' | 'succeeded' | 'failed'
+    likeDislikeLoading: 'idle' | 'pending' | 'succeeded' | 'failed',
+    commentLoading: 'idle' | 'pending' | 'succeeded' | 'failed',
 }
 
 // create the thunk
@@ -67,7 +72,22 @@ export const getSinglePost = createAsyncThunk(
         }
     },
 )
-
+export const getUserPosts = createAsyncThunk(
+    'posts/user/get',
+    async (userId: string, { rejectWithValue }) => {
+        try {
+            const response = await getReq<GetPostRes>(`/api/v1/posts/users/${userId}`)
+            return response.data
+        } catch (error: any) {
+            console.log("erro while get user posts: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    },
+)
 export const likeDislikePost = createAsyncThunk(
     'posts/like',
     async (postId: string, { rejectWithValue }) => {
@@ -84,6 +104,38 @@ export const likeDislikePost = createAsyncThunk(
         }
     },
 )
+export const addComment = createAsyncThunk(
+    'posts/comment/add',
+    async ({ content, postId }: AddCommentReq, { rejectWithValue }) => {
+        try {
+            const response = await postReq<Omit<AddCommentReq, 'postId'>, AddCommentRes>(`/api/v1/comments/posts/${postId}`, { content })
+            return response.data
+        } catch (error: any) {
+            console.log("erro while add comment: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    },
+)
+export const getComments = createAsyncThunk(
+    'posts/comments/get',
+    async (postId: string, { rejectWithValue }) => {
+        try {
+            const response = await getReq<GetCommentRes>(`/api/v1/comments/posts/${postId}`)
+            return response.data
+        } catch (error: any) {
+            console.log("erro while get comments: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    }
+)
 
 
 
@@ -91,8 +143,11 @@ export const likeDislikePost = createAsyncThunk(
 const initialState: PostState = {
     posts: null,
     signlePost: null,
+    comments: null,
+    userPosts: null,
     loading: 'idle',
-    likeDislikeLoading: 'idle'
+    likeDislikeLoading: 'idle',
+    commentLoading: 'idle',
 }
 
 export const postSlice = createSlice({
@@ -124,6 +179,17 @@ export const postSlice = createSlice({
             .addCase(getPosts.rejected, (state) => {
                 state.loading = 'failed'
             })
+            // fetch user posts
+            .addCase(getUserPosts.pending, (state) => {
+                state.loading = 'pending'
+            })
+            .addCase(getUserPosts.fulfilled, (state, action) => {
+                state.loading = 'succeeded'
+                state.userPosts = action.payload.data
+            })
+            .addCase(getUserPosts.rejected, (state) => {
+                state.loading = 'failed'
+            })
 
             // fetch single post
             .addCase(getSinglePost.pending, (state) => {
@@ -146,7 +212,7 @@ export const postSlice = createSlice({
                 if (state.signlePost) {
                     state.signlePost = {
                         ...state.signlePost,
-                        isLiked: !state.signlePost?.isLiked,
+                        isLike: !state.signlePost?.isLike,
                         likesCount: state.signlePost?.likesCount + (action.payload.like ? 1 : -1)
                     }
                 }
@@ -155,7 +221,7 @@ export const postSlice = createSlice({
                     if (findPostIndex !== -1) {
                         state.posts[findPostIndex] = {
                             ...state.posts[findPostIndex],
-                            isLiked: action.payload.like,
+                            isLike: action.payload.like,
                             likesCount: state.posts[findPostIndex]?.likesCount + (action.payload.like ? 1 : -1)
                         }
                     }
@@ -164,6 +230,42 @@ export const postSlice = createSlice({
             })
             .addCase(likeDislikePost.rejected, (state) => {
                 state.likeDislikeLoading = 'failed'
+            })
+            // fetch comments
+            .addCase(getComments.pending, (state) => {
+                state.commentLoading = 'pending'
+            })
+            .addCase(getComments.fulfilled, (state, action) => {
+                state.commentLoading = 'succeeded'
+                state.comments = action.payload.data
+            })
+            .addCase(getComments.rejected, (state) => {
+                state.commentLoading = 'failed'
+            })
+            // comment add
+            .addCase(addComment.pending, (state) => {
+                state.commentLoading = 'pending'
+            })
+            .addCase(addComment.fulfilled, (state, action) => {
+                state.commentLoading = 'succeeded'
+                state.comments?.length ? state.comments.push(action.payload.data) : state.comments = [action.payload.data]
+                // update comments count similar to like count
+                const findPostIndex = state.posts?.findIndex(post => post._id === action.payload.data.post)
+                if (findPostIndex && findPostIndex !== -1 && state.posts?.length) {
+                    state.posts[findPostIndex] = {
+                        ...state.posts[findPostIndex],
+                        commentsCount: state.posts[findPostIndex]?.commentsCount + 1
+                    }
+                }
+                if (state.signlePost) {
+                    state.signlePost = {
+                        ...state.signlePost,
+                        commentsCount: state.signlePost?.commentsCount + 1
+                    }
+                }
+            })
+            .addCase(addComment.rejected, (state) => {
+                state.commentLoading = 'failed'
             })
 
 

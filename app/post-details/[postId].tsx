@@ -1,5 +1,5 @@
 import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
-import { TABS_PATHS } from "@/constant/appRoutes";
+import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
 import { getSinglePost, likeDislikePost } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -92,7 +92,10 @@ const PostDetailScreen = () => {
             <Link
               href={{
                 pathname: TABS_PATHS.UserProfile,
-                params: { username: signlePost.owner.username },
+                params: {
+                  username: signlePost.owner.username,
+                  userId: signlePost.owner._id,
+                },
               }}
             >
               <View style={styles.authorInfo}>
@@ -142,22 +145,24 @@ const PostDetailScreen = () => {
             onPress={handleLikeToggle}
           >
             <Ionicons
-              name={signlePost.isLiked ? "heart" : "heart-outline"}
+              name={signlePost.isLike ? "heart" : "heart-outline"}
               size={22}
-              color={signlePost.isLiked ? "red" : colors.light.foreground}
+              color={signlePost.isLike ? "red" : colors.light.foreground}
             />
             <Text>{signlePost.likesCount}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: ROUTER_PATHS.comments,
+                params: { postId: signlePost._id },
+              })
+            }
+            style={styles.actionBtn}
+          >
             <Ionicons name="chatbubble-outline" size={22} />
             <Text>{signlePost?.commentsCount}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.rightActions}>
-          <TouchableOpacity>
-            <Ionicons name="share-social-outline" size={22} />
           </TouchableOpacity>
         </View>
       </View>

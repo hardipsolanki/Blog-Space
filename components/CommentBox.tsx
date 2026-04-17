@@ -1,21 +1,22 @@
 import { STRINGS } from "@/constant/string";
 import { colors } from "@/theme/colors";
+import { Comment } from "@/types/comment";
 import { Image, StyleSheet, Text, View } from "react-native";
 
-const renderCommentItem = ({ item }: any) => {
+const renderCommentItem = (comment: Comment) => {
   const s = STRINGS.comments;
   return (
     <View style={styles.commentBox}>
       <View style={styles.commentRow}>
-        <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
+        <Image source={{ uri: comment.owner.avatar }} style={styles.avatar} />
 
         <View style={{ flex: 1 }}>
           <View style={styles.rowTop}>
-            <Text style={styles.name}>{item.user.fullName}</Text>
-            <Text style={styles.time}>{item.timestamp}</Text>
+            <Text style={styles.name}>{comment.owner.username}</Text>
+            <Text style={styles.time}>{comment.createdAt}</Text>
           </View>
 
-          <Text style={styles.text}>{item.text}</Text>
+          <Text style={styles.text}>{comment.content}</Text>
 
           {/* <View style={styles.actions}>
             <View style={styles.likeRow}>

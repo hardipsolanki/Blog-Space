@@ -15,7 +15,7 @@ export interface Post {
     status: string;
     likesCount: number;
     commentsCount: number;
-    isLiked: boolean;
+    isLike: boolean;
     createdAt: string;
     updatedAt: string;
     __v: number;
@@ -41,12 +41,3 @@ export interface GetSinglePostRes {
     success: boolean;
 }
 
-export interface LikeDislikePost {
-    statusCode: number;
-    message: string;
-    data: {
-        like: boolean;
-        postId: string
-    };
-    success: boolean;
-}

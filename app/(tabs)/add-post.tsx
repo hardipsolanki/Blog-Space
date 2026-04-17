@@ -49,6 +49,7 @@ export default function AddPostScreen() {
     control,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<Input>({
     defaultValues: {
@@ -116,6 +117,7 @@ export default function AddPostScreen() {
                 text1: "Success",
                 text2: data.message || "Post added successfully",
               });
+              reset();
               router.push(TABS_PATHS.Index);
             });
         }

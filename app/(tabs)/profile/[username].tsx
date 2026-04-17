@@ -1,11 +1,11 @@
 import { ROUTER_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
+import { getUserPosts } from "@/features/posts/postSlice";
 import { getProfile } from "@/features/users/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
-import { Post } from "@/types/post";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
   Dimensions,
@@ -21,21 +21,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const screenWidth = Dimensions.get("window").width;
 const ProfileScreen = () => {
   const dispatch = useAppDispatch();
-  const { username } = useLocalSearchParams<{ username: string }>();
+  const { username, userId } = useLocalSearchParams<{
+    username: string;
+    userId: string;
+  }>();
   const { profile: user, loading } = useAppSelector((state) => state.user);
-  const posts = useAppSelector((state) => state.post);
+  const { userPosts, loading: postLoading } = useAppSelector(
+    ({ post }) => post,
+  );
   const router = useRouter();
   const s = STRINGS.profile;
 
   useEffect(() => {
-    if (username) dispatch(getProfile(username as string));
+    if (!username || !userId) return;
+    Promise.all([
+      dispatch(getProfile(username as string)),
+      dispatch(getUserPosts(userId)),
+    ]);
   }, [dispatch, username]);
 
-  const userPosts = posts.posts?.filter(
-    (post: Post) => post.owner._id === user?._id,
-  );
-
-  if (loading === "pending" || !username || !user || !userPosts) {
+  if (loading === "pending" || postLoading === "pending" || !user) {
     return (
       <SafeAreaView style={styles.container}>
         <Text>Loading...</Text>
@@ -122,15 +127,17 @@ const ProfileScreen = () => {
           </>
         }
         renderItem={({ item }) => (
-          <View style={styles.gridItem}>
-            {item.image ? (
-              <Image source={{ uri: item.image }} style={styles.postImage} />
-            ) : (
-              <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>{item.title}</Text>
-              </View>
-            )}
-          </View>
+          <Link href={`/post-details/${item._id}`}>
+            <View style={styles.gridItem}>
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.postImage} />
+              ) : (
+                <View style={styles.placeholder}>
+                  <Text style={styles.placeholderText}>{item.title}</Text>
+                </View>
+              )}
+            </View>
+          </Link>
         )}
       />
     </SafeAreaView>
