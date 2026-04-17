@@ -1,7 +1,7 @@
 import { PostCard } from "@/components/PostCard";
 import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { STRINGS } from "@/constant/string";
-import { getPosts } from "@/features/posts/postSlice";
+import { getFollowingPosts, getPosts } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import React, { useEffect, useState } from "react";
@@ -15,14 +15,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const { loading, posts, comments } = useAppSelector(({ post }) => post);
+  const { loading, posts, comments, followingPosts } = useAppSelector(
+    ({ post }) => post,
+  );
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"all" | "following">("all");
   const s = STRINGS.home;
 
   useEffect(() => {
-    dispatch(getPosts());
-  }, [dispatch]);
+    if (activeTab === "all") {
+      if (!posts?.length) dispatch(getPosts());
+    } else {
+      if (!followingPosts?.length) dispatch(getFollowingPosts());
+    }
+  }, [dispatch, activeTab]);
 
   if (loading === "pending" || !posts?.length) {
     return (
@@ -95,7 +101,7 @@ export default function HomeScreen() {
         renderItem={({ item }) => <PostCard post={item} />}
       /> */}
       <FlatList
-        data={posts}
+        data={activeTab === "following" ? followingPosts : posts}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => <PostCard {...item} />}
       />

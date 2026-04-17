@@ -12,7 +12,8 @@ interface PostState {
     signlePost: Post | null,
     comments: Comment[] | null,
     // also add likes as a stat for showing like user
-    userPosts: Post[] | null
+    userPosts: Post[] | null;
+    followingPosts: Post[] | null;
     loading: 'idle' | 'pending' | 'succeeded' | 'failed',
     likeDislikeLoading: 'idle' | 'pending' | 'succeeded' | 'failed',
     commentLoading: 'idle' | 'pending' | 'succeeded' | 'failed',
@@ -33,6 +34,22 @@ export const addPost = createAsyncThunk(
             return response.data
         } catch (error: any) {
             console.log("erro while add post: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    },
+)
+export const getFollowingPosts = createAsyncThunk(
+    'posts/following/get',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await getReq<GetPostRes>("/api/v1/posts/follow/posts")
+            return response.data
+        } catch (error: any) {
+            console.log("erro while get following users posts: ", error)
             return rejectWithValue({
                 message: error.response.data.message,
                 status: error.status,
@@ -143,6 +160,7 @@ export const getComments = createAsyncThunk(
 // Define the initial state using that type
 const initialState: PostState = {
     posts: null,
+    followingPosts: null,
     signlePost: null,
     comments: null,
     userPosts: null,
@@ -180,6 +198,19 @@ export const postSlice = createSlice({
             .addCase(getPosts.rejected, (state) => {
                 state.loading = 'failed'
             })
+
+            // fetch following posts
+            .addCase(getFollowingPosts.pending, (state) => {
+                state.loading = 'pending'
+            })
+            .addCase(getFollowingPosts.fulfilled, (state, action) => {
+                state.loading = 'succeeded'
+                state.followingPosts = action.payload.data
+            })
+            .addCase(getFollowingPosts.rejected, (state) => {
+                state.loading = 'failed'
+            })
+
             // fetch user posts
             .addCase(getUserPosts.pending, (state) => {
                 state.loading = 'pending'

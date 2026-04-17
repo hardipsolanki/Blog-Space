@@ -1,3 +1,4 @@
+import { formateRelative } from "@/config/formatTimeDate";
 import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
 import { likeDislikePost } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -12,7 +13,7 @@ import { colors } from "../theme/colors";
 export const PostCard = (post: Post) => {
   const dispatch = useAppDispatch();
   const { likeDislikeLoading } = useAppSelector((state) => state.post);
-
+  const { comments } = useAppSelector(({ post }) => post);
   const handleLikeToggle = () => {
     dispatch(likeDislikePost(post._id))
       .unwrap()
@@ -49,7 +50,7 @@ export const PostCard = (post: Post) => {
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{post.owner.username}</Text>
               <Text style={styles.username}>
-                @{post.owner.username} · {post.createdAt}
+                @{post.owner.username} · {formateRelative(post.createdAt)}
               </Text>
             </View>
           </View>
@@ -103,7 +104,7 @@ export const PostCard = (post: Post) => {
                 }
               >
                 <Ionicons name="chatbubble-outline" size={20} />
-                <Text>{post.commentsCount}</Text>
+                <Text>{comments?.length || post.commentsCount}</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
+    marginTop: 4,
     color: colors.light.foreground,
   },
   excerpt: {

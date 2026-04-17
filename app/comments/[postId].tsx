@@ -1,4 +1,5 @@
 import renderCommentItem from "@/components/CommentBox";
+import { SkeletonCommentScreen } from "@/components/skeleton/SkeletonComment";
 import { STRINGS } from "@/constant/string";
 import { addComment, getComments } from "@/features/posts/postSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -30,9 +31,9 @@ const CommentsScreen = () => {
   const [commentText, setCommentText] = useState("");
 
   if (commentLoading === "pending" || !comments?.length || !user) {
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Loading...</Text>
-    </View>;
+    <SafeAreaView style={styles.container}>
+      <SkeletonCommentScreen />
+    </SafeAreaView>;
   }
 
   useEffect(() => {

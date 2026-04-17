@@ -1,3 +1,4 @@
+import { SkeletonProfileScreen } from "@/components/skeleton/SkeletonProfileScreen";
 import { ROUTER_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
 import { getUserPosts } from "@/features/posts/postSlice";
@@ -68,7 +69,7 @@ const ProfileScreen = () => {
   if (loading === "pending" || postLoading === "pending" || !user) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading...</Text>
+        <SkeletonProfileScreen />
       </SafeAreaView>
     );
   }

@@ -2,6 +2,7 @@ import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
 import { getSinglePost, likeDislikePost } from "@/features/posts/postSlice";
+import { followUnfollow } from "@/features/users/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -23,6 +24,7 @@ const PostDetailScreen = () => {
   const { loading, signlePost, likeDislikeLoading } = useAppSelector(
     (state) => state.post,
   );
+  const { folowersLoading } = useAppSelector((state) => state.user);
 
   useEffect(() => {
     if (!postId) return;
@@ -54,6 +56,25 @@ const PostDetailScreen = () => {
           type: "error",
           text1: "Error",
           text2: error.message || "Failed to like user",
+        });
+      });
+  };
+
+  const handleFollowUnfollow = () => {
+    dispatch(followUnfollow(signlePost?.owner._id))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to follow user",
         });
       });
   };
@@ -111,7 +132,11 @@ const PostDetailScreen = () => {
                 </View>
               </View>
             </Link>
-            <TouchableOpacity style={styles.followBtn}>
+            <TouchableOpacity
+              disabled={folowersLoading === "pending"}
+              onPress={handleFollowUnfollow}
+              style={styles.followBtn}
+            >
               <Text style={styles.followText}>{s.follow}</Text>
             </TouchableOpacity>
           </View>

@@ -9,21 +9,12 @@ const renderCommentItem = (comment: Comment) => {
     <View style={styles.commentBox}>
       <View style={styles.commentRow}>
         <Image source={{ uri: comment.owner.avatar }} style={styles.avatar} />
-
         <View style={{ flex: 1 }}>
           <View style={styles.rowTop}>
             <Text style={styles.name}>{comment.owner.username}</Text>
             <Text style={styles.time}>{comment.createdAt}</Text>
           </View>
-
           <Text style={styles.text}>{comment.content}</Text>
-
-          {/* <View style={styles.actions}>
-            <View style={styles.likeRow}>
-              <Ionicons name="heart-outline" size={16} />
-              <Text style={styles.likeText}>{item.likes}</Text>
-            </View>
-          </View> */}
         </View>
       </View>
     </View>
