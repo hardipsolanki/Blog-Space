@@ -10,6 +10,7 @@ export const ROUTES = {
     followers: "followers/[userId]",
     followings: "followings/[userId]",
     comments: "comments/[postId]",
+    setting: "setting"
 };
 
 
@@ -29,5 +30,6 @@ export const ROUTER_PATHS = {
     PostDetails: '/post-details/[postId]',
     followers: "/followers/[userId]",
     followings: "/followings/[userId]",
-    comments: "/comments/[postId]"
+    comments: "/comments/[postId]",
+    setting: "/setting"
 } as const

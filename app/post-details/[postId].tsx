@@ -132,13 +132,13 @@ const PostDetailScreen = () => {
                 </View>
               </View>
             </Link>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               disabled={folowersLoading === "pending"}
               onPress={handleFollowUnfollow}
               style={styles.followBtn}
             >
               <Text style={styles.followText}>{s.follow}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Meta */}

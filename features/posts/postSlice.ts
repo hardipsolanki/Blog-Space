@@ -258,6 +258,16 @@ export const postSlice = createSlice({
                         }
                     }
                 }
+                if (state.followingPosts?.length) {
+                    const findPostIndex = state.followingPosts.findIndex(post => post._id === action.payload.postId)
+                    if (findPostIndex !== -1) {
+                        state.followingPosts[findPostIndex] = {
+                            ...state.followingPosts[findPostIndex],
+                            isLike: action.payload.like,
+                            likesCount: state.followingPosts[findPostIndex]?.likesCount + (action.payload.like ? 1 : -1)
+                        }
+                    }
+                }
 
             })
             .addCase(likeDislikePost.rejected, (state) => {

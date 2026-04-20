@@ -82,7 +82,7 @@ const ProfileScreen = () => {
           <Ionicons name="arrow-back" size={24} />
         </TouchableOpacity>
         <Text style={styles.username}>@{user.username}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push(ROUTER_PATHS.setting)}>
           <Ionicons name="settings-outline" size={24} />
         </TouchableOpacity>
       </View>

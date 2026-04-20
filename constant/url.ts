@@ -7,5 +7,5 @@
 
 // vercel deployement 
 export const CONFIG = {
-    API_BASE_URL: "http://192.168.27.103:5000"
+    API_BASE_URL: "http://192.168.27.121:5000"
 }

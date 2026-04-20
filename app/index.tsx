@@ -22,7 +22,7 @@ export default function Index() {
         }
         const result = await dispatch(crrentUser()).unwrap();
 
-        if (result.data) {
+        if (result.data.username) {
           router.replace(TABS_PATHS.Index);
         } else {
           router.replace(ROUTER_PATHS.Login);

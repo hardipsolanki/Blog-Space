@@ -1,5 +1,5 @@
 import { getReq, postReq } from '@/config/axiosConfig';
-import { CurrentUserReq, GetUserProfileRes, Profile, User, UserLoginReq, UserLoginRes, UserSignupRes } from '@/types/user';
+import { CurrentUserReq, GetUserProfileRes, LogoutRes, Profile, User, UserLoginReq, UserLoginRes, UserSignupRes } from '@/types/user';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 import { Followers, FollowUnfollow, GetFollowersRes } from '@/types/folow';
@@ -70,6 +70,23 @@ export const loginUser = createAsyncThunk(
             })
         }
     },
+)
+export const logoutUser = createAsyncThunk(
+    'users/logout',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await postReq<{}, LogoutRes>("/api/v1/users/logout")
+            clearToken()
+            return response.data
+        } catch (error: any) {
+            console.log("erro while logout user: ", error)
+            return rejectWithValue({
+                message: error.response.data.message,
+                status: error.status,
+                data: error.data.data
+            })
+        }
+    }
 )
 export const crrentUser = createAsyncThunk(
     'users/current',
@@ -153,6 +170,7 @@ export const followUnfollow = createAsyncThunk(
     }
 )
 
+
 // Define the initial state using that type
 const initialState: UserState = {
     isAuthenticated: false,
@@ -192,6 +210,19 @@ export const userSlice = createSlice({
             .addCase(loginUser.rejected, (state) => {
                 state.loading = 'failed'
 
+            })
+
+            // logout user
+            .addCase(logoutUser.pending, (state) => {
+                state.loading = 'pending'
+            })
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.loading = 'succeeded'
+                state.isAuthenticated = false
+                state.userData = null
+            })
+            .addCase(logoutUser.rejected, (state) => {
+                state.loading = 'failed'
             })
 
             // current user

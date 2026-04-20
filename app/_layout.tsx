@@ -28,6 +28,10 @@ export default function RootLayout() {
             name={ROUTES.comments}
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name={ROUTES.setting}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name={ROUTES.Login} options={{ headerShown: false }} />
           <Stack.Screen name={ROUTES.Signup} options={{ headerShown: false }} />
         </Stack>

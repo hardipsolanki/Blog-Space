@@ -80,14 +80,18 @@ const CommentsScreen = () => {
 
           <View style={{ width: 24 }} />
         </View>
-
-        {/* LIST */}
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => renderCommentItem(item)}
-          contentContainerStyle={{ paddingBottom: 90 }}
-        />
+        {!!!comments?.length ? (
+          <View style={styles.noComments}>
+            <Text>No comments yet</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => renderCommentItem(item)}
+            contentContainerStyle={{ paddingBottom: 90 }}
+          />
+        )}
 
         {/* INPUT BAR */}
         <View style={styles.inputContainer}>
@@ -188,6 +192,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: colors.light.border,
     backgroundColor: colors.light.card,
+  },
+
+  noComments: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   myAvatar: {
