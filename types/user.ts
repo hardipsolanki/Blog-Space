@@ -80,3 +80,9 @@ export interface GetUserProfileRes {
     data: Profile;
     success: boolean;
 }
+
+export interface LogoutRes {
+    statusCode: number;
+    message: string;
+    success: boolean;
+}

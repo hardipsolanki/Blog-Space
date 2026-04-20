@@ -62,6 +62,7 @@ export const STRINGS = {
         title: 'Followers',
         follow: 'Follow',
         following: 'Following',
+        you: 'You',
     },
     following: {
         title: 'Following',
@@ -73,4 +74,9 @@ export const STRINGS = {
         placeholder: 'Add a comment...',
         reply: 'Reply',
     },
+    setting: {
+        title: 'Settings',
+        logout: 'Logout',
+        description: "Are you sure you want to logout?",
+    }
 };

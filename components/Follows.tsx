@@ -10,7 +10,7 @@ import Toast from "react-native-toast-message";
 
 const FollowerItem = (followers: Followers) => {
   const dispatch = useAppDispatch();
-  const { folowersLoading } = useAppSelector(({ user }) => user);
+  const { folowersLoading, userData } = useAppSelector(({ user }) => user);
   const handleFollowUnfollow = () => {
     dispatch(followUnfollow(followers.followDetails._id))
       .unwrap()
@@ -58,23 +58,29 @@ const FollowerItem = (followers: Followers) => {
       </Link>
 
       {/* Button */}
-      <TouchableOpacity
-        onPress={handleFollowUnfollow}
-        disabled={folowersLoading === "pending"}
-        style={[
-          styles.followBtn,
-          followers.followDetails.isFollowed && styles.followingBtn,
-        ]}
-      >
-        <Text
+      {userData?._id === followers.followDetails._id ? (
+        <View style={styles.followBtn}>
+          <Text style={styles.followText}>{s.you}</Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          onPress={handleFollowUnfollow}
+          disabled={folowersLoading === "pending"}
           style={[
-            styles.followText,
-            followers.followDetails.isFollowed && styles.followingText,
+            styles.followBtn,
+            followers.followDetails.isFollowed && styles.followingBtn,
           ]}
         >
-          {followers.followDetails.isFollowed ? s.following : s.follow}
-        </Text>
-      </TouchableOpacity>
+          <Text
+            style={[
+              styles.followText,
+              followers.followDetails.isFollowed && styles.followingText,
+            ]}
+          >
+            {followers.followDetails.isFollowed ? s.following : s.follow}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
