@@ -1,22 +1,39 @@
-import renderItem from "@/components/Follows";
+import FollowerItem from "@/components/Follows";
 import { STRINGS } from "@/constant/string";
-import { mockUsers } from "@/data";
+import { getFollowers } from "@/features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const FollowingsScreen = () => {
+const FollowersScreen = () => {
+  const dispatch = useAppDispatch();
+  const { followers, folowersLoading } = useAppSelector(({ user }) => user);
+  const { userId } = useLocalSearchParams<{ userId: string }>();
   const router = useRouter();
-  const s = STRINGS.following;
+  const s = STRINGS.followers;
+
+  useEffect(() => {
+    if (!userId) return;
+    dispatch(getFollowers(userId));
+  }, [userId, dispatch]);
+
+  if (folowersLoading === "pending" && !followers) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,16 +51,16 @@ const FollowingsScreen = () => {
 
       {/* List */}
       <FlatList
-        data={mockUsers}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
+        data={followers}
+        keyExtractor={(item) => item.followDetails._id}
+        renderItem={({ item }) => <FollowerItem {...item} />}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
       />
     </SafeAreaView>
   );
 };
 
-export default FollowingsScreen;
+export default FollowersScreen;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,8 +1,10 @@
-import { ROUTES } from "@/constant/appRoutes";
+import { ROUTES, TABS_PATHS } from "@/constant/appRoutes";
+import { useAppSelector } from "@/store/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
+  const { userData } = useAppSelector((state) => state.user);
   return (
     <Tabs
       screenOptions={{
@@ -38,8 +40,15 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" color={color} size={size} />
+            <Ionicons name="person" color={color} size={size} />
           ),
+          href: {
+            pathname: TABS_PATHS.UserProfile,
+            params: {
+              username: userData?.username || "",
+              userId: userData?._id,
+            },
+          },
         }}
       />
     </Tabs>

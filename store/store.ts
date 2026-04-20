@@ -1,10 +1,12 @@
+import postSlice from '@/features/posts/postSlice'
+import userSlice from '@/features/users/userSlice'
 import { configureStore } from '@reduxjs/toolkit'
-// import authSlice from "../features/auth/authSlice"
 
 export const store = configureStore({
   reducer: {
-    // auth: authSlice,
-    
+    user: userSlice,
+    post: postSlice
+
   },
 })
 

@@ -1,21 +1,47 @@
 import { PostCard } from "@/components/PostCard";
+import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
 import { STRINGS } from "@/constant/string";
-import { mockPosts } from "@/data";
+import { getFollowingPosts, getPosts } from "@/features/posts/postSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const { loading, posts, comments, followingPosts } = useAppSelector(
+    ({ post }) => post,
+  );
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<"all" | "following">("all");
   const s = STRINGS.home;
+
+  useEffect(() => {
+    if (activeTab === "all") {
+      if (!posts?.length) dispatch(getPosts());
+    } else {
+      if (!followingPosts?.length) dispatch(getFollowingPosts());
+    }
+  }, [dispatch, activeTab]);
+
+  if (loading === "pending" || !posts?.length) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          data={[1, 2, 3, 4, 5]} // Show 5 skeletons
+          renderItem={() => <SkeletonPostCard />}
+          keyExtractor={(item) => item.toString()}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,10 +54,10 @@ export default function HomeScreen() {
           <Text style={styles.title}>{s.title}</Text>
         </View>
 
-        <View style={styles.icons}>
+        {/* <View style={styles.icons}>
           <Ionicons name="search-outline" size={22} />
           <Ionicons name="notifications-outline" size={22} />
-        </View>
+        </View> */}
       </View>
 
       {/* Tabs */}
@@ -69,10 +95,15 @@ export default function HomeScreen() {
       </View>
 
       {/* Feed */}
-      <FlatList
+      {/* <FlatList
         data={mockPosts}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <PostCard post={item} />}
+      /> */}
+      <FlatList
+        data={activeTab === "following" ? followingPosts : posts}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => <PostCard {...item} />}
       />
     </SafeAreaView>
   );
@@ -141,43 +172,3 @@ const styles = StyleSheet.create({
     color: colors.light.mutedText,
   },
 });
-
-// import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-// import React, { useCallback, useRef } from "react";
-// import { StyleSheet, Text } from "react-native";
-// import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-// const App = () => {
-//   // ref
-//   const bottomSheetRef = useRef<BottomSheet>(null);
-
-//   // callbacks
-//   const handleSheetChanges = useCallback((index: number) => {
-//     console.log("handleSheetChanges", index);
-//   }, []);
-
-//   // renders
-//   return (
-//     <GestureHandlerRootView style={styles.container}>
-//       <BottomSheet ref={bottomSheetRef} onChange={handleSheetChanges}>
-//         <BottomSheetView style={styles.contentContainer}>
-//           <Text>Awesome 🎉</Text>
-//         </BottomSheetView>
-//       </BottomSheet>
-//     </GestureHandlerRootView>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "grey",
-//   },
-//   contentContainer: {
-//     flex: 1,
-//     padding: 36,
-//     alignItems: "center",
-//   },
-// });
-
-// export default App;

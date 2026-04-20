@@ -1,4 +1,6 @@
 import { CONFIG } from "@/constant/url";
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, {
     type AxiosInstance,
     type AxiosRequestConfig,
@@ -24,13 +26,26 @@ export interface ApiError {
 
 // Create an Axios instance with base configurations
 const axiosInstance: AxiosInstance = axios.create({
-    baseURL: CONFIG.BACKEND_URL,
+    baseURL: CONFIG.API_BASE_URL,
     withCredentials: true, // Automatically send cookies with requests
     headers: {
-        "Content-Type": "application/json"
-    }
+        'Content-Type': 'application/json', // change according header type accordingly
+    },
 
 })
+
+axiosInstance.interceptors.request.use(async (config) => {
+    const accessToken = await AsyncStorage.getItem('accessToken'); // get stored access token
+    if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`; // set in header
+    }
+    return config;
+},
+    (error) => {
+        return Promise.reject(error);
+    })
+
+
 
 // Add a response interceptor to handle responses
 axiosInstance.interceptors.response.use(
@@ -201,9 +216,6 @@ const concurrentRequests = async<ResponseT1, ResponseT2>(
 
 // Interceptor to handle offline mode
 axiosInstance.interceptors.request.use((config) => {
-    if (!navigator.onLine) {
-        return Promise.reject(new Error("No internet connection"));
-    }
     return config;
 });
 

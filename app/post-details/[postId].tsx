@@ -1,9 +1,13 @@
+import { SkeletonPostCard } from "@/components/skeleton/SkeletonPostCard";
+import { ROUTER_PATHS, TABS_PATHS } from "@/constant/appRoutes";
 import { STRINGS } from "@/constant/string";
-import { mockPosts } from "@/data";
+import { getSinglePost, likeDislikePost } from "@/features/posts/postSlice";
+import { followUnfollow } from "@/features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/theme/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
   Image,
   ScrollView,
@@ -13,19 +17,66 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 const PostDetailScreen = () => {
+  const { postId } = useLocalSearchParams();
+  const dispatch = useAppDispatch();
+  const { loading, signlePost, likeDislikeLoading } = useAppSelector(
+    (state) => state.post,
+  );
+  const { folowersLoading } = useAppSelector((state) => state.user);
+
+  useEffect(() => {
+    if (!postId) return;
+    dispatch(getSinglePost(postId as string));
+  }, [postId, dispatch]);
   const router = useRouter();
   const s = STRINGS.postDetail;
 
-  const post = mockPosts[0];
+  if (loading === "pending" || !signlePost) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SkeletonPostCard />
+      </SafeAreaView>
+    );
+  }
 
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
-  const [likes, setLikes] = useState(post.likes);
+  const handleLikeToggle = () => {
+    dispatch(likeDislikePost(signlePost?._id))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to like user",
+        });
+      });
+  };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
+  const handleFollowUnfollow = () => {
+    dispatch(followUnfollow(signlePost?.owner._id))
+      .unwrap()
+      .then((data) => {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message,
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to follow user",
+        });
+      });
   };
 
   return (
@@ -37,7 +88,7 @@ const PostDetailScreen = () => {
           <Image
             source={{
               uri:
-                post.coverImage ||
+                signlePost?.image ||
                 "https://images.unsplash.com/photo-1499750310107-5fef28a66643",
             }}
             style={styles.cover}
@@ -55,34 +106,47 @@ const PostDetailScreen = () => {
         {/* Content */}
         <View style={styles.content}>
           {/* Title */}
-          <Text style={styles.title}>{post.title}</Text>
+          <Text style={styles.title}>{signlePost?.title}</Text>
 
-          {/* Author */}
           <View style={styles.authorRow}>
-            <View style={styles.authorInfo}>
-              <Image
-                source={{ uri: post.author.avatar }}
-                style={styles.avatar}
-              />
-              <View>
-                <Text style={styles.name}>{post.author.fullName}</Text>
-                <Text style={styles.username}>@{post.author.username}</Text>
+            {/* Author */}
+            <Link
+              href={{
+                pathname: TABS_PATHS.UserProfile,
+                params: {
+                  username: signlePost.owner.username,
+                  userId: signlePost.owner._id,
+                },
+              }}
+            >
+              <View style={styles.authorInfo}>
+                <Image
+                  source={{ uri: signlePost?.owner?.avatar }}
+                  style={styles.avatar}
+                />
+                <View>
+                  <Text style={styles.name}>{signlePost?.owner?.name}</Text>
+                  <Text style={styles.username}>
+                    @{signlePost?.owner?.username}
+                  </Text>
+                </View>
               </View>
-            </View>
-
-            <TouchableOpacity style={styles.followBtn}>
+            </Link>
+            <TouchableOpacity
+              disabled={folowersLoading === "pending"}
+              onPress={handleFollowUnfollow}
+              style={styles.followBtn}
+            >
               <Text style={styles.followText}>{s.follow}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Meta */}
-          <Text style={styles.meta}>
-            {post.readTime} · {post.timestamp}
-          </Text>
+          <Text style={styles.meta}>{signlePost?.createdAt}</Text>
 
           {/* Article */}
-          <Text style={styles.paragraph}>{post.excerpt}</Text>
-          <Text style={styles.paragraph}>
+          <Text style={styles.paragraph}>{signlePost?.content}</Text>
+          {/* <Text style={styles.paragraph}>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </Text>
@@ -93,41 +157,37 @@ const PostDetailScreen = () => {
           <Text style={styles.paragraph}>
             Sed ut perspiciatis unde omnis iste natus error sit voluptatem
             accusantium doloremque laudantium.
-          </Text>
+          </Text> */}
         </View>
       </ScrollView>
 
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.leftActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleLike}>
+          <TouchableOpacity
+            disabled={likeDislikeLoading === "pending"}
+            style={styles.actionBtn}
+            onPress={handleLikeToggle}
+          >
             <Ionicons
-              name={isLiked ? "heart" : "heart-outline"}
+              name={signlePost.isLike ? "heart" : "heart-outline"}
               size={22}
-              color={isLiked ? "red" : colors.light.foreground}
+              color={signlePost.isLike ? "red" : colors.light.foreground}
             />
-            <Text>{likes}</Text>
+            <Text>{signlePost.likesCount}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: ROUTER_PATHS.comments,
+                params: { postId: signlePost._id },
+              })
+            }
+            style={styles.actionBtn}
+          >
             <Ionicons name="chatbubble-outline" size={22} />
-            <Text>{post.comments}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.rightActions}>
-          <TouchableOpacity>
-            <Ionicons name="share-social-outline" size={22} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setIsBookmarked(!isBookmarked)}>
-            <Ionicons
-              name={isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color={
-                isBookmarked ? colors.light.primary : colors.light.foreground
-              }
-            />
+            <Text>{signlePost?.commentsCount}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -173,6 +233,7 @@ const styles = StyleSheet.create({
 
   /* AUTHOR */
   authorRow: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
